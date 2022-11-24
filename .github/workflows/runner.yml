@@ -1,0 +1,31 @@
+name: CI
+on:
+  workflow_dispatch:
+
+jobs:
+
+  deploy:
+    name: docker container with Ngrok tunnel
+    runs-on: ubuntu-latest
+    env:
+      NGROK_TOKEN : ${{ secrets.NGROK_AUTHTOKEN }}
+      FLUSKEY : ${{ secrets.FLUSKEY }} 
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: run container
+      run: |
+          git clone https://github.com/ajay-ghale/flussonic-media-server-dockerfile.git mediasrv
+          cd mediasrv
+          echo $FLUSKEY > etc/flussonic/license.txt
+          docker-compose up -d
+        
+    - uses: vmactions/ngrok-tunnel@v0.0.1
+      with:
+        protocol: http
+        port: 8122
+    - name: sleep
+      uses: jakejarvis/wait-action@master
+      with:
+        time: '4h'
